@@ -972,12 +972,15 @@ _papplMainloopShowJobs(
     "job-state"
   };
 
+  // Send a Get-Jobs request...
+  request = ippNewRequest(IPP_OP_GET_JOBS);
 
   if ((printer_uri = cupsGetOption("printer-uri", num_options, options)) != NULL)
   {
     // Connect to the remote printer...
     if ((http = _papplMainloopConnectURI(base_name, printer_uri, resource, sizeof(resource))) == NULL)
       return (1);
+    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printer_uri);
   }
   else
   {
@@ -994,14 +997,9 @@ _papplMainloopShowJobs(
         return (1);
       }
     }
+    _papplMainloopAddPrinterURI(request, printer_name, resource, sizeof(resource));
   }
 
-  // Send a Get-Jobs request...
-  request = ippNewRequest(IPP_OP_GET_JOBS);
-  if (printer_uri)
-    ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_URI, "printer-uri", NULL, printer_uri);
-  else
-    _papplMainloopAddPrinterURI(request, printer_name, resource, sizeof(resource));
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_NAME, "requesting-user-name", NULL, cupsGetUser());
   ippAddString(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "which-jobs", NULL, "all");
   ippAddStrings(request, IPP_TAG_OPERATION, IPP_TAG_KEYWORD, "requested-attributes", (int)(sizeof(jattrs) / sizeof(jattrs[0])), NULL, jattrs);
